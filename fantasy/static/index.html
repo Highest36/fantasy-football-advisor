@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Advisor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+:root{
+  --bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--text:#16191f;--muted:#5f6b7a;--border:#e1e5ea;
+  --accent:#1f6feb;--accent-ink:#fff;--good:#1a7f37;--warn:#b35900;--bad:#cf222e;--chip:#eef2f7;
+  --radius:12px;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1117;--surface:#161b22;--surface-2:#1c232c;--text:#e6edf3;--muted:#8d96a0;--border:#2d353f;
+  --accent:#4493f8;--accent-ink:#0d1117;--good:#3fb950;--warn:#d29922;--bad:#f85149;--chip:#21262d;
+  --shadow:none;}}
+:root[data-theme="dark"]{
+  --bg:#0d1117;--surface:#161b22;--surface-2:#1c232c;--text:#e6edf3;--muted:#8d96a0;--border:#2d353f;
+  --accent:#4493f8;--accent-ink:#0d1117;--good:#3fb950;--warn:#d29922;--bad:#f85149;--chip:#21262d;--shadow:none;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.bar h1{font-size:17px;margin:0;white-space:nowrap}
+.bar .sub{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{max-width:1100px;margin:0 auto;padding:0 8px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav button{flex:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:9px 12px;font:inherit;font-weight:600;cursor:pointer}
+nav button.on{color:var(--text);border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}.small{font-size:13px}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.chip.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.chip.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.tbl{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.pname{font-weight:600;cursor:pointer}.pname:hover{color:var(--accent)}
+button.btn,select,input,textarea{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px}
+button.btn{cursor:pointer;font-weight:600}
+button.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.btn.sm{padding:2px 8px;font-size:12px}
+button.btn:disabled{opacity:.5;cursor:default}
+textarea{width:100%;min-height:70px;resize:vertical}
+.alert{border-left:3px solid var(--warn);padding:8px 12px;background:var(--surface-2);border-radius:6px;margin-bottom:10px}
+.md{line-height:1.55}.md h1,.md h2,.md h3{font-size:16px;margin:14px 0 6px}.md table{font-size:13px;margin:8px 0}
+.md td,.md th{border:1px solid var(--border)}.md code{background:var(--surface-2);padding:1px 4px;border-radius:4px}
+.msg{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:10px 0;background:var(--surface)}
+.msg.q{background:var(--surface-2);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+@keyframes s{to{transform:rotate(360deg)}}
+dialog{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);max-width:640px;width:calc(100% - 32px);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.hide-sm{}
+@media (max-width:640px){.hide-sm{display:none}main{padding:12px 16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar"><h1>🏈 Fantasy Advisor</h1><span class="sub" id="sub">loading…</span></div>
+  <nav id="tabs">
+    <button data-t="team" class="on">Team</button><button data-t="waivers">Waivers</button>
+    <button data-t="games">Games</button><button data-t="ask">Ask Claude</button>
+    <button data-t="reports">Reports</button><button data-t="profile">Profile</button>
+  </nav>
+</header>
+<main>
+  <section id="team" class="on"></section>
+  <section id="waivers">
+    <div class="card">
+      <div class="row">
+        <select id="wpos"><option value="">Best by position</option><option>RB</option><option>WR</option><option>TE</option><option>QB</option><option>K</option><option>DEF</option></select>
+        <label class="small muted">max % rostered (ESPN) <input id="wmax" type="number" value="60" min="1" max="100" style="width:70px"></label>
+        <button class="btn" onclick="loadWaivers()">Refresh</button>
+      </div>
+      <p class="small muted" style="margin:8px 0 0">Availability is estimated from ESPN % rostered — confirm on Yahoo, then mark <b>Taken</b> / <b>Avail</b> so Claude remembers. Projections are ESPN PPR-scale: compare, don't quote.</p>
+    </div>
+    <div class="card"><div class="tbl" id="wtbl"></div></div>
+  </section>
+  <section id="games"><div class="card"><div class="tbl" id="gtbl"></div></div></section>
+  <section id="ask">
+    <div class="card">
+      <textarea id="q" placeholder="e.g. Who should I start at FLEX this week?  ·  Is there a trade that fixes my week-6 byes?"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn primary" id="askbtn" onclick="ask()">Ask</button>
+        <button class="btn" onclick="newConvo()">New conversation</button>
+        <span class="small muted" id="askstat"></span>
+      </div>
+      <div class="row small" style="margin-top:8px">
+        <span class="muted">Quick:</span>
+        <button class="btn sm" onclick="quick('Who should I start this week? Go slot by slot.')">Start/sit</button>
+        <button class="btn sm" onclick="quick('Best waiver adds for my roster right now, with drops.')">Waivers</button>
+        <button class="btn sm" onclick="quick('Find 2-3 realistic trade ideas that improve my starting lineup rest-of-season.')">Trades</button>
+        <button class="btn sm" onclick="quick('Check my roster for injuries and bye-week holes over the next 3 weeks.')">Injuries & byes</button>
+      </div>
+    </div>
+    <div id="convo"></div>
+    <div class="card"><h2>Run a digest now</h2>
+      <p class="small muted" style="margin-top:0">Same as the scheduled ones — writes a report and pushes the summary to your iPhone.</p>
+      <div class="row"><button class="btn" onclick="digest('waivers')">Waiver picks</button><button class="btn" onclick="digest('sunday')">Lineup check</button><button class="btn" onclick="digest('tnf')">TNF check</button><span class="small muted" id="dstat"></span></div>
+    </div>
+  </section>
+  <section id="reports"><div class="grid2"><div class="card"><h2>Reports</h2><div id="rlist"></div></div><div class="card md" id="rview"><span class="muted">Pick a report.</span></div></div></section>
+  <section id="profile"></section>
+</main>
+<dialog id="dlg"><div id="dlgbody"></div><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="dlg.close()">Close</button></div></dialog>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api=async(p,o={})=>{const r=await fetch(p,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});if(!r.ok)throw new Error((await r.text()).slice(0,300));return r.json()};
+const post=(p,b)=>api(p,{method:'POST',body:b});
+const md=t=>window.marked?marked.parse(t||''):'<pre>'+esc(t)+'</pre>';
+const et=u=>u?new Date(u).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'2-digit'})+' ET':'';
+const f=(v,d=1)=>v==null?'–':(+v).toFixed(d);
+let OV=null, loaded={};
+function injChip(s){if(!s||s==='ACTIVE')return'';const c=/out|ir|injury|doubt/i.test(s)?'bad':'warn';return` <span class="chip ${c}">${esc(s.replace('INJURY_RESERVE','IR'))}</span>`}
+function tab(t){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===t));
+  try{localStorage.setItem('tab',t)}catch(e){}
+  if(!loaded[t]){loaded[t]=1;({team:loadTeam,waivers:loadWaivers,games:loadGames,ask:loadConvo,reports:loadReports,profile:loadProfile})[t]()}}
+$('#tabs').onclick=e=>{if(e.target.dataset.t)tab(e.target.dataset.t)};
+
+async function playerDlg(name){$('#dlgbody').innerHTML='<span class="spin"></span> loading '+esc(name);dlg.showModal();
+  try{const d=await api('/api/player?name='+encodeURIComponent(name));if(d.error){$('#dlgbody').textContent=d.error;return}
+  const rows=(d['last_4']||[]).map(w=>`<tr><td>${w.week}</td><td>${esc(w.opponent_team)}</td><td class="n">${f(w.pts)}</td><td class="n">${w.snap_pct==null?'–':Math.round(w.snap_pct*100)+'%'}</td><td class="n">${w.carries??0}</td><td class="n">${w.targets??0}</td><td class="n">${w.target_share==null?'–':Math.round(w.target_share*100)+'%'}</td></tr>`).join('');
+  $('#dlgbody').innerHTML=`<h2 style="margin:0 0 4px">${esc(d.name)} <span class="chip">${esc(d.pos)} · ${esc(d.team)}</span>${injChip(d.injury&&d.injury.status)}</h2>
+   <p class="small muted" style="margin:0 0 10px">${f(d.season_ppg,2)} pts/game (${esc(d.scoring)}) · ${d.games} games · next: ${(d.upcoming||[]).map(u=>esc(u.opp)).join(', ')}</p>
+   <div class="tbl"><table><tr><th>Wk</th><th>Opp</th><th>Pts</th><th>Snap</th><th>Car</th><th>Tgt</th><th>Tgt%</th></tr>${rows}</table></div>
+   ${d.injury?`<p class="small">${esc(d.injury.status)} — ${esc(d.injury.body_part||'')} ${esc(d.injury.notes||'')}</p>`:''}
+   <div class="row" style="margin-top:10px"><button class="btn sm" onclick="dlg.close();tab('ask');quick('Tell me about ${esc(d.name).replace(/'/g,"")} — start, hold, or drop?')">Ask Claude about him</button></div>`}
+  catch(e){$('#dlgbody').textContent=e.message}}
+
+async function loadTeam(){const el=$('#team');el.innerHTML='<div class="card"><span class="spin"></span> loading roster…</div>';
+  try{OV=await api('/api/overview')}catch(e){el.innerHTML=`<div class="card">${esc(e.message)}</div>`;return}
+  const p=OV.profile;$('#sub').textContent=`${p.team_name||'My team'} · Week ${OV.week} · ${p.league_size||'?'}-team ${p.scoring||'?'}`;
+  const order={QB:0,RB:1,WR:2,TE:3,'W/R/T':4,K:5,DEF:6,BN:7,IR:8};
+  const r=[...OV.roster].sort((a,b)=>(order[a.slot]??7)-(order[b.slot]??7));
+  const rows=r.map(x=>`<tr><td><span class="chip">${esc(x.slot||'BN')}</span></td><td><span class="pname" onclick="playerDlg('${esc(x.name).replace(/'/g,"\\'")}')">${esc(x.name)}</span>${injChip(x.injury)}<div class="small muted">${esc(x.pos||'')} · ${esc(x.team||'')}${x.bye?' · bye '+x.bye:''}</div></td>
+   <td class="small">${x.game?esc(x.game.opp)+'<div class="muted">'+et(x.game.kickoff_utc)+'</div>':(x.bye==OV.week?'<span class="chip bad">BYE</span>':'–')}</td>
+   <td class="n">${x.game&&x.game.implied!=null?f(x.game.implied):'–'}</td><td class="n">${f(x.proj_this_week)}</td><td class="n hide-sm">${f(x.ros_ppg)}</td><td class="n hide-sm small muted">${(x.last_3||[]).map(v=>f(v)).join(' / ')}</td></tr>`).join('');
+  const alerts=[];
+  for(const [w,names] of Object.entries(OV.upcoming_byes)) if(names.length) alerts.push(`<b>Week ${w} byes (${names.length}):</b> ${names.map(esc).join(', ')}`);
+  const hurt=r.filter(x=>x.injury&&x.injury!=='ACTIVE'&&!['BN','IR'].includes(x.slot));
+  if(hurt.length) alerts.unshift(`<b>Injured starters:</b> ${hurt.map(x=>esc(x.name)+' ('+esc(x.injury)+')').join(', ')}`);
+  const claims=(p.pending_claims||[]).map(c=>`<tr><td>+ <b>${esc(c.add)}</b></td><td class="muted">− ${esc(c.drop||'—')}</td><td class="small muted">${esc(c.submitted||'')}</td>
+     <td><button class="btn sm" onclick="resolveClaim('${esc(c.add).replace(/'/g,"\\'")}',true)">Won</button> <button class="btn sm" onclick="resolveClaim('${esc(c.add).replace(/'/g,"\\'")}',false)">Lost</button></td></tr>`).join('');
+  el.innerHTML=`${alerts.length?'<div class="card">'+alerts.map(a=>'<div class="alert">'+a+'</div>').join('')+'</div>':''}
+   ${claims?'<div class="card"><h2>Pending waiver claims</h2><div class="tbl"><table>'+claims+'</table></div></div>':''}
+   <div class="card"><h2>Roster — week ${OV.week}</h2><div class="tbl"><table><tr><th>Slot</th><th>Player</th><th>Game</th><th class="n">Team tot.</th><th class="n">Proj</th><th class="n hide-sm">ROS/g</th><th class="n hide-sm">Last 3</th></tr>${rows}</table></div>
+   <p class="small muted" style="margin:8px 0 0">Injuries from Sleeper · projections ESPN (PPR-scale) · team total = Vegas implied points. Profile updated ${esc(p.updated||'never')}.</p></div>`}
+async function resolveClaim(add,won){await post('/api/claims/resolve',{add,won});loaded.profile=0;loadTeam()}
+
+async function loadWaivers(){const el=$('#wtbl');el.innerHTML='<span class="spin"></span> ranking free agents…';
+  try{const pos=$('#wpos').value, d=await api(`/api/waivers?max_owned=${$('#wmax').value}${pos?'&position='+pos:''}`);
+  el.innerHTML='<table><tr><th>Player</th><th>Avail.</th><th class="n">Own%</th><th class="n">Wk</th><th class="n">Next 3</th><th class="n">ROS/g</th><th class="n hide-sm">Sleeper adds</th><th class="hide-sm">Last 3</th><th></th></tr>'+
+   d.map(p=>{const n=esc(p.name).replace(/'/g,"\\'");return `<tr><td><span class="pname" onclick="playerDlg('${n}')">${esc(p.name)}</span>${injChip(p.injury)}<div class="small muted">${esc(p.pos)} · ${esc(p.team)}</div></td>
+   <td><span class="chip ${p.availability==='confirmed'?'good':p.availability==='likely'?'':'warn'}">${esc(p.availability)}</span></td><td class="n">${f(p.pct_owned)}</td><td class="n">${f(p.proj_this_week)}</td><td class="n">${f(p.proj_next_3)}</td><td class="n"><b>${f(p.ros_ppg)}</b></td>
+   <td class="n hide-sm">${p.sleeper_adds_48h?(p.sleeper_adds_48h/1000).toFixed(0)+'k':'–'}</td><td class="small muted hide-sm">${(p.last_3_actual||[]).map(v=>f(v)).join(' / ')}</td>
+   <td style="white-space:nowrap"><button class="btn sm" onclick="markP('${n}','taken')">Taken</button> <button class="btn sm" onclick="markP('${n}','available')">Avail</button></td></tr>`}).join('')+'</table>'}
+  catch(e){el.textContent=e.message}}
+async function markP(name,status){await post('/api/mark',{name,status});loadWaivers()}
+
+async function loadGames(){const el=$('#gtbl');el.innerHTML='<span class="spin"></span>';
+  const d=await api('/api/games');const mine=new Set((OV?OV.roster:[]).map(r=>r.team));
+  el.innerHTML='<table><tr><th>Game</th><th>Kickoff</th><th>Line</th><th class="n">Total</th><th>Implied</th><th class="hide-sm">Weather</th></tr>'+d.map(g=>`<tr><td><b>${esc(g.away)}</b> @ <b>${esc(g.home)}</b>${[g.home,g.away].some(t=>mine.has(t))?' <span class="chip good">yours</span>':''}</td><td class="small">${et(g.kickoff_utc)}</td><td class="small">${esc(g.line||'–')}</td><td class="n">${f(g.total)}</td>
+   <td class="small">${g.implied?Object.entries(g.implied).map(([t,v])=>esc(t)+' '+f(v)).join(' · '):'–'}</td><td class="small muted hide-sm">${g.indoor?'Dome':esc(g.weather||'')}</td></tr>`).join('')+'</table>'}
+
+// ---- Ask ----
+let SID=null;try{SID=localStorage.getItem('sid')}catch(e){}
+function newConvo(){SID=null;try{localStorage.removeItem('sid')}catch(e){};$('#convo').innerHTML='';$('#askstat').textContent='New conversation'}
+function quick(t){$('#q').value=t;ask()}
+async function loadConvo(){try{const js=await api('/api/jobs?kind=ask&limit=10');
+  // show the current conversation chain (newest last)
+  const chain=js.filter(j=>SID&&(j.session_id===SID||j.parent_session===SID)).reverse();
+  $('#convo').innerHTML=chain.map(renderJob).join('');chain.filter(j=>['queued','running'].includes(j.status)).forEach(j=>poll(j.id))}catch(e){}}
+function renderJob(j){return `<div id="j${j.id}"><div class="msg q">${esc(j.question)}</div><div class="msg md">${j.status==='done'?md(j.result):j.status==='error'?'<span class="chip bad">error</span> '+esc(j.result):'<span class="spin"></span> Claude is pulling data and thinking… (usually 30–120 s)'}</div></div>`}
+async function ask(){const q=$('#q').value.trim();if(!q)return;$('#askbtn').disabled=true;
+  try{const j=await post('/api/ask',{question:q,session_id:SID});$('#q').value='';$('#convo').insertAdjacentHTML('beforeend',renderJob(j));poll(j.id)}
+  catch(e){$('#askstat').textContent=e.message;$('#askbtn').disabled=false}}
+async function poll(id){const j=await api('/api/jobs/'+id);const el=$('#j'+id);if(el)el.outerHTML=renderJob(j);
+  if(['queued','running'].includes(j.status)){$('#askstat').innerHTML=j.status==='queued'?'Queued behind another Claude run…':'';setTimeout(()=>poll(id),3000);return}
+  $('#askbtn').disabled=false;if(j.session_id){SID=j.session_id;try{localStorage.setItem('sid',SID)}catch(e){}}
+  $('#askstat').textContent=j.cost_usd!=null?`answered · follow-ups continue this conversation`:'';loaded.team=0;loaded.profile=0}
+async function digest(kind){$('#dstat').innerHTML='<span class="spin"></span> running '+kind+' digest (1–3 min)…';
+  const j=await post('/api/digest/'+kind);const tick=async()=>{const s=await api('/api/jobs/'+j.id);
+   if(['queued','running'].includes(s.status))return setTimeout(tick,4000);
+   $('#dstat').innerHTML=s.status==='done'?'<span class="chip good">done</span> pushed to phone — see Reports':'<span class="chip bad">failed</span> '+esc(s.result);loaded.reports=0};tick()}
+
+// ---- Reports ----
+async function loadReports(){const d=await api('/api/reports');$('#rlist').innerHTML=d.length?d.map(r=>`<div><a href="#" onclick="openReport('${esc(r.name)}');return false">${esc(r.name.replace('.md','').replace('_',' · '))}</a></div>`).join(''):'<span class="muted">No reports yet — the first waiver digest runs Tuesday 9 PM ET.</span>'}
+async function openReport(n){const r=await api('/api/reports/'+encodeURIComponent(n));$('#rview').innerHTML=md(r.content.replace(/^SUMMARY:.*\n/,''))}
+
+// ---- Profile ----
+async function loadProfile(){const el=$('#profile');const p=await api('/api/profile');const ws=p.waivers||{};
+  const rs=(p.my_roster||[]).map(x=>{const n=esc(x.name).replace(/'/g,"\\'");return `<tr><td><b>${esc(x.name)}</b> <span class="small muted">${esc(x.pos||'')} · ${esc(x.team||'')}</span></td>
+   <td><select onchange="post('/api/roster/slot',{name:'${n}',slot:this.value})">${['QB','RB','WR','TE','W/R/T','K','DEF','BN','IR'].map(s=>`<option ${s===(x.slot||'BN')?'selected':''}>${s}</option>`).join('')}</select></td>
+   <td><button class="btn sm" onclick="rmP('${n}')">Remove</button></td></tr>`}).join('');
+  const lst=(k,label)=>`<div><b class="small">${label}</b> <span class="small muted">${(p[k]||[]).length?(p[k]||[]).map(n=>`${esc(n)} <a href="#" onclick="markP2('${esc(n).replace(/'/g,"\\'")}');return false">×</a>`).join(' · '):'none'}</span></div>`;
+  el.innerHTML=`<div class="card"><h2>My roster</h2><div class="tbl"><table>${rs}</table></div>
+    <div class="row" style="margin-top:10px"><input id="addn" placeholder="Add player (full name)" style="flex:1;min-width:160px"><select id="adds">${['BN','QB','RB','WR','TE','W/R/T','K','DEF','IR'].map(s=>`<option>${s}</option>`).join('')}</select><button class="btn primary" onclick="addP()">Add</button></div></div>
+   <div class="card"><h2>Waiver claim tracker</h2><div class="row"><input id="ca" placeholder="Claim: add" style="flex:1;min-width:140px"><input id="cd" placeholder="drop" style="flex:1;min-width:120px"><button class="btn" onclick="addClaim()">Track claim</button></div><p class="small muted">Resolve claims (Won/Lost) on the Team tab.</p></div>
+   <div class="card"><h2>League settings</h2><div class="grid2">
+     <label class="small">Teams <input id="s_size" type="number" value="${p.league_size??''}" style="width:80px"></label>
+     <label class="small">Scoring <select id="s_scoring">${['half','ppr','std'].map(s=>`<option ${s===p.scoring?'selected':''}>${s}</option>`).join('')}</select></label>
+     <label class="small">Waiver type <select id="s_wtype">${['priority','faab','reverse_standings'].map(s=>`<option ${s===ws.type?'selected':''}>${s}</option>`).join('')}</select></label>
+     <label class="small">Waiver priority <input id="s_prio" type="number" value="${ws.priority??''}" style="width:80px"></label>
+     <label class="small">FAAB remaining <input id="s_faab" type="number" value="${ws.faab_remaining??''}" style="width:80px"></label>
+     <label class="small">Bench spots <input id="s_bench" type="number" value="${p.bench_spots??''}" style="width:80px"></label></div>
+     <div style="margin-top:10px"><label class="small">Notes for Claude</label><textarea id="s_notes">${esc(p.notes||'')}</textarea></div>
+     <div class="row" style="margin-top:8px"><button class="btn primary" onclick="saveSettings()">Save settings</button><span class="small muted" id="sstat"></span></div></div>
+   <div class="card"><h2>Availability memory</h2>${lst('rostered_elsewhere','Taken by other teams:')}${lst('confirmed_available','Confirmed on my wire:')}</div>
+   <p class="small muted">Profile updated ${esc(p.updated||'never')}. Claude reads and edits this same profile.</p>`}
+async function rmP(name){if(!confirm('Remove '+name+'?'))return;await post('/api/roster/remove',{name});loaded.team=0;loadProfile()}
+async function addP(){const name=$('#addn').value.trim();if(!name)return;try{await post('/api/roster/add',{name,slot:$('#adds').value});loaded.team=0;loadProfile()}catch(e){alert(e.message)}}
+async function addClaim(){const add=$('#ca').value.trim();if(!add)return;await post('/api/claims/add',{add,drop:$('#cd').value.trim()||null});loaded.team=0;loadProfile()}
+async function markP2(name){await post('/api/mark',{name,status:'clear'});loadProfile()}
+async function saveSettings(){const n=v=>v===''?null:+v;const p=await api('/api/profile');
+  await post('/api/profile',{league_size:n($('#s_size').value),scoring:$('#s_scoring').value,bench_spots:n($('#s_bench').value),notes:$('#s_notes').value,
+   waivers:{...(p.waivers||{}),type:$('#s_wtype').value,priority:n($('#s_prio').value),faab_remaining:n($('#s_faab').value)}});
+  $('#sstat').textContent='Saved';loaded.team=0}
+
+let start='team';try{start=localStorage.getItem('tab')||'team'}catch(e){}
+const deep=decodeURIComponent(location.hash.slice(1));   // #report=<file>.md  or  #<tab>
+if(deep.startsWith('report='))start='reports';else if(document.getElementById(deep))start=deep;
+tab(start);if(start!=='team'){loaded.team=1;loadTeam()}
+if(deep.startsWith('report=')){openReport(deep.slice(7));history.replaceState(null,'',location.pathname)}
+</script>
+</body>
+</html>
